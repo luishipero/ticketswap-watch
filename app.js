@@ -7,9 +7,10 @@ const _ = require('lodash');
 const notifier = require('node-notifier');
 const exec = require('child_process').exec;
 
-const HOST = 'https://www.ticketswap.com';
-const EVENT_URL = '/event/h-a-i-k-u-avec-dixon/3ba089c9-1d9a-4851-8635-1332198449c1';
-const CHECK_INTERVAL_MS = 60000;
+const HOST = 'https://www.ticketswap.nl';
+const EVENT_URL = '/event/wardruna-in-de-grote-zaal-tivolivredenburg/6f8d589a-b35e-4435-bb17-13b27f70bd54';
+//const EVENT_URL = '/event/soenda-indoor-2019/locker-medium/7c94e2e3-aaa6-4a36-a1b6-7a8f2eda818a/1376260';
+const CHECK_INTERVAL_MS = 10000;
 
 let cookieJar = request.jar();
 
@@ -35,6 +36,13 @@ let fetchResult = function (link) {
 };
 
 let botAction = {
+  callAvailableTicket: function() {
+	  setInterval(function(){
+		while(true) {
+			console.log("TICKET");
+		}
+	  }, 3000);		
+  },
   robotCheck: function (url) {
     console.log(`${url} : ---> Need to visit and check if you are block as robot`);
     return notifier.notify({
@@ -65,13 +73,19 @@ let app = function () {
     let $ = cheerio.load(result.body);
     let hasData = false;
     let linksFn = {};
+	
+	var ticketsString = $('#tickets h2').text();
+	var isTicket = false;
 
-    if ($('.events-list--item a').length > 0) {
-      $('.events-list--item a').each((index, link) => {
-        let fetchUrl = HOST + _.get(link, 'attribs.href');
+    if (ticketsString.includes('Aangeboden')) {
+		console.log("YYEAEAEEEEEEEEEEEEEEEHHHHHH TICKET");
+		botAction.callAvailableTicket();
+        //let fetchUrl = HOST + $("#tickets [class^=css-] ul [class^=css-] a").attr("href");
+		let fetchUrl = HOST + EVENT_URL;
+		isTicket = true;
         linksFn[fetchUrl] = fetchResult(fetchUrl);
-      });
     } else {
+		console.log("ELSE");
       linksFn[HOST + EVENT_URL] = Promise.resolve($);
     }
 
@@ -86,7 +100,7 @@ let app = function () {
         return botAction.robotCheck(url);
       }
 
-      if (parseInt(counterValue, 10) > 0) {
+      if (isTicket) {
         return botAction.availableTicket(url, counterValue);
       }
 
